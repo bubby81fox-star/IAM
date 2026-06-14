@@ -1,24 +1,14 @@
-{
-  "name": "iam-browser",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  base: '/IAM/', 
+  build: {
+    outDir: 'dist',
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.43.4",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "lucide-react": "^0.378.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.2.2",
-    "vite": "^5.4.2"
+  // 👈 Tells the builder to ignore your backend migration folder completely
+  watch: {
+    exclude: ['supabase/**']
   }
-}
+});
