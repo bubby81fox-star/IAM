@@ -89,70 +89,85 @@
       </div>
     </div>
   </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-    document.addEventListener("DOMContentLoaded", () => {
-      const AUTH0_DOMAIN = "dev-t0zgk43t61c80h7q.us.auth0.com";
-      const CLIENT_ID = "amkFoQPZtek3eDKm1zsPiW034R2Cjn4I";
-      const REDIRECT_URI = "https://bubby81fox-star.github.io/IAM";
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const AUTH0_DOMAIN = "dev-t0zgk43t61c80h7q.us.auth0.com";
+  const CLIENT_ID = "amkFoQPZtek3eDKm1zsPiW034R2Cjn4I";
+  const REDIRECT_URI = "https://bubby81fox-star.github.io/IAM";
 
-      const loginBtn = document.getElementById("login-btn");
-      const logoutBtn = document.getElementById("logout-btn");
-      const loggedOutState = document.getElementById("logged-out-state");
-      const loggedInState = document.getElementById("logged-in-state");
-      const userDisplay = document.getElementById("user-display");
+  // Initialize Supabase (Replace with your actual project details)
+  const SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co";
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY";
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // 1. CHECK FOR TOKENS RETURNED IN THE URL AFTER LOGIN
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        const urlParams = new URLSearchParams(hash);
-        const idToken = urlParams.get("id_token");
+  const loginBtn = document.getElementById("login-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+  const loggedOutState = document.getElementById("logged-out-state");
+  const loggedInState = document.getElementById("logged-in-state");
+  const userDisplay = document.getElementById("user-display");
 
-        if (idToken) {
-          localStorage.setItem("id_token", idToken);
-          window.location.hash = ""; // Clear tokens from the address bar visibility
-        }
-      }
+  // 1. PARSE INCOMING TOKENS FROM THE URL REDIRECT
+  const hash = window.location.hash.substring(1);
+  if (hash) {
+    const urlParams = new URLSearchParams(hash);
+    const idToken = urlParams.get("id_token");
 
-      // 2. CHECK IF USER SESSION COMPONENT ALREADY EXISTS
-      const savedToken = localStorage.getItem("id_token");
-      if (savedToken) {
-        try {
-          // Extract information profile details directly from the token string
-          const base64Url = savedToken.split('.')[1];
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const tokenData = JSON.parse(atob(base64));
-          
-          loggedOutState.classList.add("hidden");
-          loggedInState.classList.remove("hidden");
-          userDisplay.textContent = tokenData.name || tokenData.email || "Eric Fraschilla";
-        } catch (e) {
-          console.error("Token read error:", e);
-        }
-      }
+    if (idToken) {
+      localStorage.setItem("id_token", idToken);
+      window.location.hash = ""; // Clean URL bar
+    }
+  }
 
-      // 3. TRIGGER ROUTING HANDSHAKE ON CLICK
-      loginBtn.addEventListener("click", () => {
-        loginBtn.textContent = "Connecting to Grid...";
-        loginBtn.disabled = true;
+  // 2. ACTIVATE USER SESSION AND SYNC WITH SUPABASE
+  const savedToken = localStorage.getItem("id_token");
+  if (savedToken) {
+    try {
+      // Decode user data for local UI display
+      const base64Url = savedToken.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const tokenData = JSON.parse(atob(base64));
+      
+      loggedOutState.classList.add("hidden");
+      loggedInState.classList.remove("hidden");
+      userDisplay.textContent = tokenData.name || tokenData.email || "Eric Fraschilla";
 
-        // Redirects smoothly to Auth0 universal login window natively
-        const authUrl = `https://${AUTH0_DOMAIN}/authorize?` + 
-                        `client_id=${CLIENT_ID}&` +
-                        `response_type=id_token&` + 
-                        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
-                        `scope=openid%20profile%20email&` +
-                        `nonce=xtensible_secure_string_123&` +
-                        `prompt=login`;
-
-        window.location.href = authUrl;
+      // Securely pass the Auth0 JWT directly to Supabase
+      const { data, error } = await supabase.auth.setSession({
+        access_token: savedToken, // Passing the OIDC ID token as the access context
+        refresh_token: ""
       });
 
-      // 4. CLEAR DEVICE STORAGE ON LOGOUT
-      logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("id_token");
-        window.location.href = `https://${AUTH0_DOMAIN}/v2/logout?client_id=${CLIENT_ID}&returnTo=${encodeURIComponent(REDIRECT_URI)}`;
-      });
-    });
-  </script>
+      if (error) console.error("Supabase Session sync error:", error.message);
+      else console.log("Supabase and Auth0 successfully synced grid parameters.");
+
+    } catch (e) {
+      console.error("Token setup error:", e);
+    }
+  }
+
+  // 3. TRIGGER LOGIN
+  loginBtn.addEventListener("click", () => {
+    loginBtn.textContent = "Connecting to Grid...";
+    loginBtn.disabled = true;
+
+    const authUrl = `https://${AUTH0_DOMAIN}/authorize?` + 
+                    `client_id=${CLIENT_ID}&` +
+                    `response_type=id_token&` + 
+                    `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+                    `scope=openid%20profile%20email&` +
+                    `nonce=xtensible_secure_string_123&` +
+                    `prompt=login`;
+
+    window.location.href = authUrl;
+  });
+
+  // 4. LOGOUT
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("id_token");
+    window.location.href = `https://${AUTH0_DOMAIN}/v2/logout?client_id=${CLIENT_ID}&returnTo=${encodeURIComponent(REDIRECT_URI)}`;
+  });
+});
+</script>
 </body>
 </html>
