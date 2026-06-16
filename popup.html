@@ -6,12 +6,14 @@
   <title>IAM BROWSER ADDON</title>
   <style>
     body {
-      width: 320px;
-      margin: 0;
-      padding: 16px;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 24px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #f9fafb;
       color: #111827;
+      box-sizing: border-box;
     }
     .container {
       text-align: center;
@@ -27,7 +29,7 @@
       margin: 0;
     }
     .app-title {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       margin: 4px 0 0 0;
       color: #1f2937;
@@ -35,25 +37,26 @@
     .status-box {
       background: #ffffff;
       border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
+      border-radius: 12px;
+      padding: 24px;
       margin-bottom: 20px;
-      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
     .status-text {
       font-size: 14px;
       margin: 0;
       color: #4b5563;
+      line-height: 1.5;
     }
     .btn {
       width: 100%;
-      padding: 12px;
-      font-size: 14px;
+      padding: 14px;
+      font-size: 15px;
       font-weight: 600;
       color: #ffffff;
-      background-color: #6366f1; /* Modern Indigo */
+      background-color: #6366f1;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.2s ease;
     }
@@ -75,17 +78,82 @@
 
     <div class="status-box">
       <div id="logged-out-state">
-        <p class="status-text" style="margin-bottom: 16px;">Please sign in to securely sync your environment credentials.</p>
+        <p class="status-text" style="margin-bottom: 20px;">Securely authenticate into your development environment grid.</p>
         <button id="login-btn" class="btn">Sign In with Auth0</button>
       </div>
 
       <div id="logged-in-state" class="hidden">
-        <p class="status-text" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">✓ Securely Authenticated</p>
-        <p id="user-email" class="status-text" style="font-size: 12px; word-break: break-all;"></p>
+        <p class="status-text" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">✓ Authenticated successfully</p>
+        <p id="user-display" class="status-text" style="font-size: 13px; font-weight: bold; word-break: break-all; color: #111827;"></p>
+        <button id="logout-btn" class="btn" style="background-color: #ef4444; margin-top: 16px;">Sign Out</button>
       </div>
     </div>
   </div>
 
-  <script src="popup.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const AUTH0_DOMAIN = "dev-t0zgk43t61c80h7q.us.auth0.com";
+      const CLIENT_ID = "amkFoQPZtek3eDKm1zsPiW034R2Cjn4I";
+      const REDIRECT_URI = "https://bubby81fox-star.github.io/IAM";
+
+      const loginBtn = document.getElementById("login-btn");
+      const logoutBtn = document.getElementById("logout-btn");
+      const loggedOutState = document.getElementById("logged-out-state");
+      const loggedInState = document.getElementById("logged-in-state");
+      const userDisplay = document.getElementById("user-display");
+
+      // 1. CHECK FOR TOKENS RETURNED IN THE URL AFTER LOGIN
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        const urlParams = new URLSearchParams(hash);
+        const idToken = urlParams.get("id_token");
+
+        if (idToken) {
+          localStorage.setItem("id_token", idToken);
+          window.location.hash = ""; // Clear tokens from the address bar visibility
+        }
+      }
+
+      // 2. CHECK IF USER SESSION COMPONENT ALREADY EXISTS
+      const savedToken = localStorage.getItem("id_token");
+      if (savedToken) {
+        try {
+          // Extract information profile details directly from the token string
+          const base64Url = savedToken.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const tokenData = JSON.parse(atob(base64));
+          
+          loggedOutState.classList.add("hidden");
+          loggedInState.classList.remove("hidden");
+          userDisplay.textContent = tokenData.name || tokenData.email || "Eric Fraschilla";
+        } catch (e) {
+          console.error("Token read error:", e);
+        }
+      }
+
+      // 3. TRIGGER ROUTING HANDSHAKE ON CLICK
+      loginBtn.addEventListener("click", () => {
+        loginBtn.textContent = "Connecting to Grid...";
+        loginBtn.disabled = true;
+
+        // Redirects smoothly to Auth0 universal login window natively
+        const authUrl = `https://${AUTH0_DOMAIN}/authorize?` + 
+                        `client_id=${CLIENT_ID}&` +
+                        `response_type=id_token&` + 
+                        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+                        `scope=openid%20profile%20email&` +
+                        `nonce=xtensible_secure_string_123&` +
+                        `prompt=login`;
+
+        window.location.href = authUrl;
+      });
+
+      // 4. CLEAR DEVICE STORAGE ON LOGOUT
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("id_token");
+        window.location.href = `https://${AUTH0_DOMAIN}/v2/logout?client_id=${CLIENT_ID}&returnTo=${encodeURIComponent(REDIRECT_URI)}`;
+      });
+    });
+  </script>
 </body>
 </html>
