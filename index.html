@@ -1,173 +1,139 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IAM BROWSER ADDON</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      width: 100%;
-      max-width: 360px;
-      margin: 0 auto;
-      padding: 24px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #f9fafb;
-      color: #111827;
-      box-sizing: border-box;
-    }
-    .container {
-      text-align: center;
-    }
-    .header {
-      margin-bottom: 24px;
-    }
-    .company-title {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #6b7280;
-      margin: 0;
-    }
-    .app-title {
-      font-size: 20px;
-      font-weight: 700;
-      margin: 4px 0 0 0;
-      color: #1f2937;
-    }
-    .status-box {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-    .status-text {
-      font-size: 14px;
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.5;
-    }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      font-size: 15px;
-      font-weight: 600;
-      color: #ffffff;
-      background-color: #6366f1;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-    .btn:hover {
-      background-color: #4f46e5;
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <div class="header">
-      <p class="company-title">Xtensible Web & App</p>
-      <h1 class="app-title">Identity Manager</h1>
-    </div>
-
-    <div class="status-box">
-      <div id="logged-out-state">
-        <p class="status-text" style="margin-bottom: 20px;">Securely authenticate into your development environment grid.</p>
-        <button id="login-btn" class="btn">Sign In with Auth0</button>
-      </div>
-
-      <div id="logged-in-state" class="hidden">
-        <p class="status-text" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">✓ Authenticated successfully</p>
-        <p id="user-display" class="status-text" style="font-size: 13px; font-weight: bold; word-break: break-all; color: #111827;"></p>
-        <button id="logout-btn" class="btn" style="background-color: #ef4444; margin-top: 16px;">Sign Out</button>
-      </div>
-    </div>
-  </div>
 <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      const AUTH0_DOMAIN = "dev-t0zgk43t61c80h7q.us.auth0.com";
-      const CLIENT_ID = "amkFoQPZtek3eDKm1zsPiW034R2Cjn4I";
-      const REDIRECT_URI = "https://bubby81fox-star.github.io/IAM";
+const SUPABASE_URL = 'https://ppzbmpyhikkrahonwpm.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemJtcHloaWtrcmFocW9ud3BtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDY1MzYsImV4cCI6MjA5NDk4MjUzNn0.csWZWPpF60JMecwAaMqDVCiuhp8SbxEstOkGoS1csp4'
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-      // Live Supabase Grid Parameters
-      const SUPABASE_URL = "https://ppzbmpyhikkrahonwpm.supabase.co";
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemJtcHloaWtrcmFocW9ud3BtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDY1MzYsImV4cCI6MjA5NDk4MjUzNn0.csWZWPpF60JMecwAaMqDVCiuhp8SbxEstOkGoS1csp4";
-      const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let user = null
+let currentDomain = 'pinwheel.local'
+let currentTab = 'feed'
 
-      const loginBtn = document.getElementById("login-btn");
-      const logoutBtn = document.getElementById("logout-btn");
-      const loggedOutState = document.getElementById("logged-out-state");
-      const loggedInState = document.getElementById("logged-in-state");
-      const userDisplay = document.getElementById("user-display");
+db.auth.onAuthStateChange(async (event, session) => {
+  user = session?.user || null
+  const authBtn = document.getElementById('auth-btn')
+  const msgInput = document.getElementById('msg-input')
+  const submitBtn = document.getElementById('submit-btn')
 
-      // 1. PARSE INCOMING TOKENS FROM THE URL REDIRECT
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        const urlParams = new URLSearchParams(hash);
-        const idToken = urlParams.get("id_token");
+  if (user) {
+    authBtn.innerText = "Sign Out"
+    document.getElementById('identity-badge').innerHTML = '<span class="badge">🛡️ Guided Grid</span>'
+    msgInput.disabled = false; submitBtn.disabled = false
+    msgInput.placeholder = "Type your message..."
+    detectBrowserContext()
+  } else {
+    authBtn.innerText = "Sign In"
+    document.getElementById('identity-badge').innerHTML = ''
+    msgInput.disabled = true; submitBtn.disabled = true
+    msgInput.placeholder = "Please sign in to interact..."
+    syncDomainState()
+  }
+})
 
-        if (idToken) {
-          localStorage.setItem("id_token", idToken);
-          window.location.hash = ""; // Clean URL bar
-        }
+function detectBrowserContext() {
+  if (typeof chrome !== 'undefined' && chrome.tabs) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0] && tabs[0].url) {
+        currentDomain = new URL(tabs[0].url).hostname.replace('www.', '');
+        syncDomainState();
       }
-
-      // 2. ACTIVATE USER SESSION AND SYNC WITH SUPABASE
-      const savedToken = localStorage.getItem("id_token");
-      if (savedToken) {
-        try {
-          // Decode user data for local UI display
-          const base64Url = savedToken.split('.')[1];
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const tokenData = JSON.parse(atob(base64));
-          
-          loggedOutState.classList.add("hidden");
-          loggedInState.classList.remove("hidden");
-          userDisplay.textContent = tokenData.name || tokenData.email || "Eric Fraschilla";
-
-          // Securely pass the Auth0 JWT directly to Supabase
-          const { data, error } = await supabase.auth.setSession({
-            access_token: savedToken,
-            refresh_token: ""
-          });
-
-          if (error) console.error("Supabase Session sync error:", error.message);
-          else console.log("Supabase and Auth0 successfully synced grid parameters.");
-
-        } catch (e) {
-          console.error("Token setup error:", e);
-        }
-      }
-
-      // 3. TRIGGER LOGIN
-      loginBtn.addEventListener("click", () => {
-        loginBtn.textContent = "Connecting to Grid...";
-        loginBtn.disabled = true;
-
-        const authUrl = `https://${AUTH0_DOMAIN}/authorize?` + 
-                        `client_id=${CLIENT_ID}&` +
-                        `response_type=id_token&` + 
-                        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
-                        `scope=openid%20profile%20email&` +
-                        `nonce=xtensible_secure_string_123&` +
-                        `prompt=login`;
-
-        window.location.href = authUrl;
-      });
-
-      // 4. LOGOUT
-      logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("id_token");
-        window.location.href = `https://${AUTH0_DOMAIN}/v2/logout?client_id=${CLIENT_ID}&returnTo=${encodeURIComponent(REDIRECT_URI)}`;
-      });
     });
-  </script>
+  } else {
+    syncDomainState();
+  }
+}
+
+async function syncDomainState() {
+  document.getElementById('active-domain-txt').innerText = currentDomain;
+  await loadAngelGuidance();
+  await loadGuestbookEntries();
+  await loadChatMessages();
+}
+
+async function loadAngelGuidance() {
+  const { data } = await db.from('angel_guidance').select('*').limit(1).single();
+  if (data) {
+    document.getElementById('angel-message').innerText = `"${data.angel_response}"`;
+    document.getElementById('angel-scripture').innerText = `${data.scripture || ''} — ${data.prayer || ''}`;
+  } else {
+    document.getElementById('angel-message').innerText = `"Fear not, for I walk before you on this domain path."`;
+    document.getElementById('angel-scripture').innerText = "Isaiah XLI:X";
+  }
+}
+
+async function loadGuestbookEntries() {
+  const { data } = await db.from('guestbook_entries').select('*').eq('canonical_url', currentDomain).order('created_at', { ascending: false }).limit(20);
+  document.getElementById('entries-container').innerHTML = (data || []).map(entry => `
+    <div class="post">
+      <div class="post-header">
+        <span class="post-user">🕊️ ${entry.author_display_name}</span>
+        <span class="post-time">${new Date(entry.created_at).toLocaleTimeString()}</span>
+      </div>
+      <div style="font-size:14px;">${entry.body}</div>
+    </div>
+  `).join('') || '<div style="color:#4b5563;text-align:center;padding:32px;font-size:13px;">No domain records spoken yet.</div>';
+}
+
+async function loadChatMessages() {
+  const { data } = await db.from('chat_messages').select('*').order('created_at', { ascending: false }).limit(25);
+  document.getElementById('chat-container').innerHTML = (data || []).map(msg => `
+    <div class="post" style="border-left:3px solid #7c3aed;">
+      <div class="post-header">
+        <span class="post-user">💬 ${msg.user_email.split('@')[0]}</span>
+        <span class="post-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+      </div>
+      <div style="font-size:14px;">${msg.message}</div>
+    </div>
+  `).join('') || '<div style="color:#4b5563;text-align:center;padding:32px;font-size:13px;">Chat grid is silent.</div>';
+}
+
+async function submitData() {
+  if (!user) return;
+  const input = document.getElementById('msg-input');
+  const bodyText = input.value.trim();
+  if (!bodyText) return;
+
+  if (currentTab === 'feed') {
+    const { error } = await db.from('guestbook_entries').insert({
+      canonical_url: currentDomain,
+      author_id: user.id,
+      author_display_name: user.user_metadata?.name || user.email.split('@')[0],
+      body: bodyText
+    });
+    if (error) showErr(error.message);
+    else { input.value = ''; await loadGuestbookEntries(); }
+  } else {
+    const { error } = await db.from('chat_messages').insert({
+      user_id: user.id,
+      user_email: user.email,
+      message: bodyText
+    });
+    if (error) showErr(error.message);
+    else { input.value = ''; await loadChatMessages(); }
+  }
+}
+
+function switchTab(target) {
+  currentTab = target;
+  document.querySelectorAll('.tab').forEach((el, idx) => el.classList.toggle('active', (idx === 0 && target === 'feed') || (idx === 1 && target === 'chat')));
+  document.getElementById('feed-tab').style.display = target === 'feed' ? 'flex' : 'none';
+  document.getElementById('chat-tab').style.display = target === 'chat' ? 'flex' : 'none';
+}
+
+function showErr(m) {
+  const e = document.getElementById('error');
+  e.textContent = m; e.style.display = 'block';
+  setTimeout(() => e.style.display = 'none', 4000);
+}
+
+function handleAuthAction() {
+  if (user) {
+    db.auth.signOut();
+  } else {
+    db.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: 'https://bubby81fox-star.github.io' }
+    });
+  }
+}
+</script>
 </body>
 </html>
