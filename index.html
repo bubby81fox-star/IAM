@@ -3,939 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IAM Browser - Christ-Centered Guestbook & Chat</title>
-  <meta name="description" content="Every webpage gets a guestbook and chat room. Domain owners configure angels and saints, not demons.">
+  <title>IAM BROWSER ADDON</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
+    body {
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f9fafb;
+      color: #111827;
       box-sizing: border-box;
     }
-
-    :root {
-      --bg-primary: #0f172a;
-      --bg-secondary: #1e293b;
-      --bg-tertiary: #334155;
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent: #f59e0b;
-      --accent-hover: #fbbf24;
-      --success: #10b981;
-      --error: #ef4444;
-      --border: #475569;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-      color: var(--text-primary);
-      min-height: 100vh;
-      line-height: 1.6;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    /* Loading Screen */
-    .loading-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 1rem;
-      background: var(--bg-primary);
-      z-index: 100;
-    }
-
-    .loading-screen .cross {
-      width: 48px;
-      height: 48px;
-      color: var(--accent);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid transparent;
-      border-top-color: currentColor;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    /* Auth Screen */
-    .auth-screen {
-      min-height: 100vh;
-      display: flex;
-    }
-
-    .auth-branding {
-      display: none;
-      flex: 1;
-      padding: 3rem;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, transparent 50%, rgba(16, 185, 129, 0.1) 100%);
-    }
-
-    .auth-branding h1 {
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      letter-spacing: -0.02em;
-    }
-
-    .auth-branding .tagline {
-      font-size: 1.25rem;
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-    }
-
-    .auth-branding .description {
-      color: var(--text-muted);
-      max-width: 28rem;
+    .container {
       text-align: center;
-      line-height: 1.7;
-      margin-bottom: 2rem;
     }
-
-    .feature-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      padding: 1rem;
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      margin-bottom: 0.75rem;
+    .header {
+      margin-bottom: 24px;
     }
-
-    .feature-card .icon {
-      width: 24px;
-      height: 24px;
-      color: var(--accent);
-      flex-shrink: 0;
+    .company-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      margin: 0;
     }
-
-    .feature-card h3 {
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .feature-card p {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .auth-form-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
-
-    .auth-form-box {
-      width: 100%;
-      max-width: 28rem;
-    }
-
-    .auth-form-box .mobile-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .auth-form-box .mobile-header .cross {
-      width: 48px;
-      height: 48px;
-      color: var(--accent);
-      margin-bottom: 1rem;
-    }
-
-    .auth-form-box .mobile-header h1 {
-      font-size: 1.5rem;
+    .app-title {
+      font-size: 20px;
       font-weight: 700;
+      margin: 4px 0 0 0;
+      color: #1f2937;
     }
-
-    .auth-form-box .mobile-header p {
-      color: var(--text-secondary);
-      font-size: 0.875rem;
+    .status-box {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
-
-    .auth-form {
-      background: rgba(30, 41, 59, 0.8);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      padding: 2rem;
+    .status-text {
+      font-size: 14px;
+      margin: 0;
+      color: #4b5563;
+      line-height: 1.5;
     }
-
-    .auth-form h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .auth-form .subtitle {
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-      font-size: 0.875rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      color: var(--text-primary);
-      font-size: 1rem;
-      transition: all 0.2s;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
-    }
-
-    .form-group input::placeholder {
-      color: var(--text-muted);
-    }
-
-    .error-message {
-      padding: 0.75rem;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 0.5rem;
-      color: var(--error);
-      font-size: 0.875rem;
-      margin-bottom: 1rem;
-    }
-
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.875rem 1.5rem;
-      font-size: 1rem;
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
       font-weight: 600;
+      color: #ffffff;
+      background-color: #6366f1;
       border: none;
-      border-radius: 0.75rem;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background-color 0.2s ease;
     }
-
-    .btn-primary {
-      width: 100%;
-      background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%);
-      color: #0f172a;
+    .btn:hover {
+      background-color: #4f46e5;
     }
-
-    .btn-primary:hover:not(:disabled) {
-      background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
-      transform: translateY(-1px);
+    .hidden {
+      display: none;
     }
+  </style>
+</head>
+<body>
 
-    .btn-primary:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+  <div class="container">
+    <div class="header">
+      <p class="company-title">Xtensible Web & App</p>
+      <h1 class="app-title">Identity Manager</h1>
+    </div>
 
-    .btn-secondary {
-      background: var(--bg-tertiary);
-      color: var(--text-secondary);
-    }
+    <div class="status-box">
+      <div id="logged-out-state">
+        <p class="status-text" style="margin-bottom: 20px;">Securely authenticate into your development environment grid.</p>
+        <button id="login-btn" class="btn">Sign In with Auth0</button>
+      </div>
 
-    .btn-secondary:hover {
-      background: var(--border);
-      color: var(--text-primary);
-    }
+      <div id="logged-in-state" class="hidden">
+        <p class="status-text" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">✓ Authenticated successfully</p>
+        <p id="user-display" class="status-text" style="font-size: 13px; font-weight: bold; word-break: break-all; color: #111827;"></p>
+        <button id="logout-btn" class="btn" style="background-color: #ef4444; margin-top: 16px;">Sign Out</button>
+      </div>
+    </div>
+  </div>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const AUTH0_DOMAIN = "dev-t0zgk43t61c80h7q.us.auth0.com";
+      const CLIENT_ID = "amkFoQPZtek3eDKm1zsPiW034R2Cjn4I";
+      const REDIRECT_URI = "https://bubby81fox-star.github.io/IAM";
 
-    .btn-ghost {
-      background: transparent;
-      color: var(--accent);
-    }
+      // Live Supabase Grid Parameters
+      const SUPABASE_URL = "https://ppzbmpyhikkrahonwpm.supabase.co";
+      const SUPABASE_ANON_KEY = "PASTE_YOUR_ACTUAL_SUPABASE_ANON_PUBLIC_KEY_HERE";
+      const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    .btn-ghost:hover {
-      color: var(--accent-hover);
-    }
+      const loginBtn = document.getElementById("login-btn");
+      const logoutBtn = document.getElementById("logout-btn");
+      const loggedOutState = document.getElementById("logged-out-state");
+      const loggedInState = document.getElementById("logged-in-state");
+      const userDisplay = document.getElementById("user-display");
 
-    .auth-toggle {
-      text-align: center;
-      margin-top: 1.5rem;
-    }
+      // 1. PARSE INCOMING TOKENS FROM THE URL REDIRECT
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        const urlParams = new URLSearchParams(hash);
+        const idToken = urlParams.get("id_token");
 
-    .auth-toggle button {
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-
-    /* Main App Layout */
-    .app-container {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header */
-    .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 1rem;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .app-header .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .app-header .logo-icon {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
-      border-radius: 0.625rem;
-    }
-
-    .app-header .logo-icon svg {
-      width: 20px;
-      height: 20px;
-      color: var(--bg-primary);
-    }
-
-    .app-header .logo-text h1 {
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-    }
-
-    .app-header .logo-text p {
-      font-size: 0.625rem;
-      color: var(--text-muted);
-    }
-
-    .app-header .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .user-avatar {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.875rem;
-      color: var(--bg-primary);
-      cursor: pointer;
-    }
-
-    /* URL Input Bar */
-    .url-bar {
-      padding: 1rem;
-      background: rgba(30, 41, 59, 0.8);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .url-input-group {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .url-icon-box {
-      width: 40px;
-      height: 40px;
-      flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
-      border-radius: 0.625rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .url-icon-box svg {
-      width: 20px;
-      height: 20px;
-      color: var(--bg-primary);
-    }
-
-    .url-input-wrapper {
-      flex: 1;
-      position: relative;
-    }
-
-    .url-input-wrapper input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      padding-right: 2.5rem;
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      color: var(--text-primary);
-      font-size: 0.875rem;
-    }
-
-    .url-input-wrapper input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .url-input-wrapper input::placeholder {
-      color: var(--text-muted);
-    }
-
-    .url-input-wrapper .lock-icon {
-      position: absolute;
-      right: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      color: var(--text-muted);
-    }
-
-    .current-room {
-      margin-top: 0.75rem;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .current-room a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .current-room a:hover {
-      color: var(--accent-hover);
-    }
-
-    /* Welcome Screen */
-    .welcome-screen {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      overflow-y: auto;
-    }
-
-    .welcome-content {
-      text-align: center;
-      max-width: 32rem;
-    }
-
-    .welcome-icon {
-      width: 96px;
-      height: 96px;
-      margin: 0 auto 2rem;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 25px 50px -12px rgba(245, 158, 11, 0.25);
-    }
-
-    .welcome-icon svg {
-      width: 48px;
-      height: 48px;
-      color: var(--bg-primary);
-    }
-
-    .welcome-content h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-
-    .welcome-content > p {
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-      line-height: 1.7;
-    }
-
-    .welcome-features {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-    }
-
-    .welcome-feature {
-      padding: 1.25rem;
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-    }
-
-    .welcome-feature .icon-box {
-      width: 40px;
-      height: 40px;
-      margin: 0 auto 0.75rem;
-      border-radius: 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .welcome-feature .icon-box svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .welcome-feature:nth-child(1) .icon-box {
-      background: rgba(245, 158, 11, 0.1);
-    }
-
-    .welcome-feature:nth-child(1) .icon-box svg {
-      color: var(--accent);
-    }
-
-    .welcome-feature:nth-child(2) .icon-box {
-      background: rgba(16, 185, 129, 0.1);
-    }
-
-    .welcome-feature:nth-child(2) .icon-box svg {
-      color: var(--success);
-    }
-
-    .welcome-feature:nth-child(3) .icon-box {
-      background: rgba(59, 130, 246, 0.1);
-    }
-
-    .welcome-feature:nth-child(3) .icon-box svg {
-      color: #3b82f6;
-    }
-
-    .welcome-feature h3 {
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .welcome-feature p {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    @media (max-width: 768px) {
-      .welcome-features {
-        grid-template-columns: 1fr;
+        if (idToken) {
+          localStorage.setItem("id_token", idToken);
+          window.location.hash = ""; // Clean URL bar
+        }
       }
-    }
 
-    /* Chat Room */
-    .chat-room {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+      // 2. ACTIVATE USER SESSION AND SYNC WITH SUPABASE
+      const savedToken = localStorage.getItem("id_token");
+      if (savedToken) {
+        try {
+          // Decode user data for local UI display
+          const base64Url = savedToken.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const tokenData = JSON.parse(atob(base64));
+          
+          loggedOutState.classList.add("hidden");
+          loggedInState.classList.remove("hidden");
+          userDisplay.textContent = tokenData.name || tokenData.email || "Eric Fraschilla";
 
-    .chat-header {
-      padding: 1rem;
-      background: rgba(30, 41, 59, 0.8);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+          // Securely pass the Auth0 JWT directly to Supabase
+          const { data, error } = await supabase.auth.setSession({
+            access_token: savedToken,
+            refresh_token: ""
+          });
 
-    .chat-header .room-info {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex: 1;
-      min-width: 0;
-    }
+          if (error) console.error("Supabase Session sync error:", error.message);
+          else console.log("Supabase and Auth0 successfully synced grid parameters.");
 
-    .chat-header .room-info svg {
-      width: 20px;
-      height: 20px;
-      color: var(--accent);
-      flex-shrink: 0;
-    }
+        } catch (e) {
+          console.error("Token setup error:", e);
+        }
+      }
 
-    .chat-header .room-info h2 {
-      font-size: 0.875rem;
-      font-weight: 600;
-    }
+      // 3. TRIGGER LOGIN
+      loginBtn.addEventListener("click", () => {
+        loginBtn.textContent = "Connecting to Grid...";
+        loginBtn.disabled = true;
 
-    .chat-header .room-info p {
-      font-size: 0.625rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+        const authUrl = `https://${AUTH0_DOMAIN}/authorize?` + 
+                        `client_id=${CLIENT_ID}&` +
+                        `response_type=id_token&` + 
+                        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+                        `scope=openid%20profile%20email&` +
+                        `nonce=xtensible_secure_string_123&` +
+                        `prompt=login`;
 
-    .chat-header .stats {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      font-size: 0.75rem;
-    }
+        window.location.href = authUrl;
+      });
 
-    .chat-header .stat {
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-    }
-
-    .chat-header .stat svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .chat-header .stat.angels {
-      color: var(--success);
-    }
-
-    .chat-header .stat.messages {
-      color: var(--accent);
-    }
-
-    .chat-header .settings-btn {
-      padding: 0.5rem;
-      background: rgba(51, 65, 85, 0.5);
-      border: none;
-      border-radius: 0.5rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .chat-header .settings-btn:hover {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-    }
-
-    .messages-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-    }
-
-    .messages-empty {
-      text-align: center;
-      padding: 3rem 1rem;
-    }
-
-    .messages-empty svg {
-      width: 48px;
-      height: 48px;
-      color: var(--text-muted);
-      margin-bottom: 1rem;
-    }
-
-    .messages-empty p {
-      color: var(--text-muted);
-    }
-
-    .messages-empty p:first-of-type {
-      font-size: 1.125rem;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
-    }
-
-    .message-item {
-      display: flex;
-      gap: 0.75rem;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      margin-bottom: 0.75rem;
-      transition: background 0.2s;
-    }
-
-    .message-item:hover {
-      background: rgba(30, 41, 59, 0.3);
-    }
-
-    .message-item.own {
-      background: rgba(245, 158, 11, 0.05);
-    }
-
-    .message-avatar {
-      width: 40px;
-      height: 40px;
-      flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.875rem;
-      color: var(--bg-primary);
-    }
-
-    .message-content {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .message-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .message-author {
-      font-weight: 600;
-      font-size: 0.875rem;
-    }
-
-    .message-time {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .message-text {
-      color: var(--text-secondary);
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
-    .message-delete {
-      opacity: 0;
-      padding: 0.25rem;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .message-item:hover .message-delete {
-      opacity: 1;
-    }
-
-    .message-delete:hover {
-      color: var(--error);
-    }
-
-    .chat-input-area {
-      padding: 1rem;
-      background: rgba(30, 41, 59, 0.8);
-      backdrop-filter: blur(8px);
-      border-top: 1px solid var(--border);
-    }
-
-    .chat-input-group {
-      display: flex;
-      gap: 0.75rem;
-    }
-
-    .chat-input-group textarea {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      color: var(--text-primary);
-      font-size: 0.875rem;
-      resize: none;
-      min-height: 44px;
-      max-height: 120px;
-    }
-
-    .chat-input-group textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .chat-input-group textarea::placeholder {
-      color: var(--text-muted);
-    }
-
-    .chat-input-group .send-btn {
-      padding: 0.75rem 1rem;
-      background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%);
-      border: none;
-      border-radius: 0.75rem;
-      color: var(--bg-primary);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      self-align: flex-end;
-    }
-
-    .chat-input-group .send-btn:hover:not(:disabled) {
-      background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
-    }
-
-    .chat-input-group .send-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .chat-input-group .send-btn svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .chat-unauthenticated {
-      padding: 1rem;
-      background: rgba(30, 41, 59, 0.8);
-      backdrop-filter: blur(8px);
-      border-top: 1px solid var(--border);
-      text-align: center;
-      color: var(--text-muted);
-    }
-
-    /* Settings Panel */
-    .settings-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 40;
-    }
-
-    .settings-panel {
-      position: fixed;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 100%;
-      max-width: 28rem;
-      background: var(--bg-primary);
-      border-left: 1px solid var(--border);
-      z-index: 50;
-      display: flex;
-      flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    }
-
-    .settings-panel.open {
-      transform: translateX(0);
-    }
-
-    .settings-header {
-      padding: 1rem;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .settings-header h2 {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .settings-close {
-      padding: 0.5rem;
-      background: none;
-      border: none;
-      border-radius: 0.5rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .settings-close:hover {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-    }
-
-    .settings-tabs {
-      display: flex;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .settings-tab {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.75rem;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      border-bottom: 2px solid transparent;
-    }
-
-    .settings-tab:hover {
-      color: var(--text-primary);
-      background: rgba(51, 65, 85, 0.5);
-    }
-
-    .settings-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .settings-tab svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    .settings-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-    }
-
-    .profile-card {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: rgba(30, 41, 59
+      // 4. LOGOUT
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("id_token");
+        window.location.href = `https://${AUTH0_DOMAIN}/v2/logout?client_id=${CLIENT_ID}&returnTo=${encodeURIComponent(REDIRECT_URI)}`;
+      });
+    });
+  </script>
+</body>
+</html>
